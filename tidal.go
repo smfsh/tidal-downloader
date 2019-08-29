@@ -7,21 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
-
-	"github.com/google/uuid"
 )
-
-type tidalConfig struct {
-	sessionid1  string
-	sessionid2  string
-	uniqueKey   string
-	countrycode string
-	quality     string
-	username    string
-	password    string
-	userid      int
-}
 
 type sessionData struct {
 	CountryCode string `json:"countryCode"`
@@ -31,37 +17,29 @@ type sessionData struct {
 
 const TIDAL_URL_BASE string = "https://api.tidalhifi.com/v1/"
 
-var config tidalConfig
-
 func main() {
 	fmt.Println("Starting Tidal Downloader")
-	setConfig()
+	//setConfig()
+	c := NewTidalConfig("LOSSLESS", "username", "password")
 
-	login(config.username, config.password)
+	login(c)
 }
 
-func setConfig() {
-	config.uniqueKey = strings.Replace(uuid.New().String(), "-", "", -1)[16:]
-	config.quality = "LOSSLESS"
-	config.username = "username"
-	config.password = "password"
+func login(c *tidalConfig) {
+	fmt.Println("Attempting to login as", c.username)
+	session1 := getSession(c, 1)
+	session2 := getSession(c, 2)
+
+	c.countrycode = session1.CountryCode
+	c.userid = session1.UserId
+	c.sessionid1 = session1.SessionId
+
+	c.sessionid2 = session2.SessionId
+
+	fmt.Println("Settings:", c)
 }
 
-func login(username string, password string) {
-	fmt.Println("Attempting to login as", username)
-	session1 := getSession(username, password, 1)
-	session2 := getSession(username, password, 2)
-
-	config.countrycode = session1.CountryCode
-	config.userid = session1.UserId
-	config.sessionid1 = session1.SessionId
-
-	config.sessionid2 = session2.SessionId
-
-	fmt.Println(config)
-}
-
-func getSession(username string, password string, session int) sessionData {
+func getSession(c *tidalConfig, session int) sessionData {
 	var token string
 	switch session {
 	case 1:
@@ -71,10 +49,10 @@ func getSession(username string, password string, session int) sessionData {
 	}
 
 	params := url.Values{}
-	params.Add("username", username)
-	params.Add("password", password)
+	params.Add("username", c.username)
+	params.Add("password", c.password)
 	params.Add("token", token)
-	params.Add("clientUniqueKey", config.uniqueKey)
+	params.Add("clientUniqueKey", c.uniqueKey)
 	params.Add("version", "1.9.1")
 
 	resp, err := http.PostForm(TIDAL_URL_BASE+"login/username", params)
