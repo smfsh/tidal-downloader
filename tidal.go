@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
@@ -90,5 +91,16 @@ func getSession(username string, password string, session int) sessionData {
 	if err != nil {
 		panic(err)
 	}
+
+	vp := url.Values{}
+	vp.Add("sessionId", sessionData.SessionId)
+	validate, err := http.Get(TIDAL_URL_BASE + "users/" + strconv.Itoa(sessionData.UserId) + "?" + vp.Encode())
+	if err != nil {
+		panic(err)
+	}
+	if validate.StatusCode != 200 {
+		panic("Tidal sessionId is invalid.")
+	}
+
 	return sessionData
 }
