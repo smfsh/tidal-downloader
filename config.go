@@ -16,7 +16,7 @@ type tidalConfig struct {
 	userid      int
 }
 
-func NewTidalConfig(quality string, username string, password string) *tidalConfig {
+func newTidalConfig(quality string, username string, password string) *tidalConfig {
 	c := new(tidalConfig)
 
 	c.uniqueKey = strings.Replace(uuid.New().String(), "-", "", -1)[16:]
