@@ -15,7 +15,7 @@ func main() {
 	// Login with configuration.
 	login(c)
 
-	track := getTrack(80185439, c)
+	track := getTrack(80185438, c)
 	//get("albums/62437813", c)
 	album := getAlbum(80185437, c)
 
@@ -37,4 +37,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	if stream.EncryptionKey != "" {
+		fmt.Println("Attempting to decrypt", track.Title)
+		key, nonce := decryptToken(stream.EncryptionKey)
+		decryptFile("file.flac", "file-decoded.flac", key, nonce)
+	}
+
 }

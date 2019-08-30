@@ -10,11 +10,12 @@ import (
 )
 
 type tidalObject struct {
-	Id          int    `json:"id"`
-	Title       string `json:"title"`
-	Duration    int    `json:"duration"`
-	TrackNumber int    `json:"trackNumber"`
-	Url         string `json:"url"`
+	Id            int    `json:"id"`
+	Title         string `json:"title"`
+	Duration      int    `json:"duration"`
+	TrackNumber   int    `json:"trackNumber"`
+	Url           string `json:"url"`
+	EncryptionKey string `json:"encryptionKey"`
 }
 
 func get(url string, c *tidalConfig) tidalObject {
