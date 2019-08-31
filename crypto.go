@@ -4,7 +4,6 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/base64"
-	"fmt"
 	"io"
 	"os"
 )
@@ -16,37 +15,38 @@ func decryptToken(token string) ([]byte, []byte) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("%08b", dMaster)
+	// Token decodes to a 48 byte array.
 	dToken, err := base64.StdEncoding.DecodeString(token)
 	if err != nil {
 		panic(err)
 	}
 
-	// Initialization Vector.
+	// Initialization Vector for AES CBC encrypted cipher text.
 	iv := dToken[:16]
-	// Cipher Text.
+	// Encrypted cipher text containing block encryption key and nonce to decrypt file.
 	ct := dToken[16:]
 
+	// Initialize new cipher block utilizing Tidal master key.
 	block, err := aes.NewCipher(dMaster)
 	if err != nil {
 		panic(err)
 	}
 
+	// Initialize decrypter utilizing init vector from encrypted token (cipher text).
+	// https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_Block_Chaining_(CBC)
 	cbc := cipher.NewCBCDecrypter(block, iv)
+	// Decrypt and overwrite the encrypted object with a decrypted one.
 	cbc.CryptBlocks(ct, ct)
 
-	println(len(ct))
-	fmt.Println(string(ct))
+	// Cipher text is 32 bytes long, the remaining 8 bytes is thrown away.
 	key := ct[:16]
-	nonce := ct[16:24]
-	fmt.Println(string(key))
-	fmt.Println(string(nonce))
+	ctriv := ct[16:24]
 
-	return key, nonce
+	return key, ctriv
 
 }
 
-func decryptFile(encFile string, decFile string, key []byte, nonce []byte) {
+func decryptFile(encFile string, decFile string, key []byte, iv []byte) {
 	inFile, err := os.Open(encFile)
 	if err != nil {
 		panic(err)
@@ -59,13 +59,25 @@ func decryptFile(encFile string, decFile string, key []byte, nonce []byte) {
 	}
 	defer outFile.Close()
 
+	// Initialize a new cipher block utilizing decrypted key from token.
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		panic(err)
 	}
 
-	ctr := cipher.NewCTR(block, nonce)
+	// Initialization vector for CTR decryption must be exactly the same
+	// length as the block size being decrypted. Check for this difference
+	// and add padding to the end of the byte array if needed.
+	if block.BlockSize()-len(iv) > 0 {
+		pad := make([]byte, block.BlockSize()-len(iv))
+		iv = append(iv, pad...)
+	}
 
+	// Initialize decrypter utilizing decrypted nonce from token.
+	// https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Counter_(CTR)
+	ctr := cipher.NewCTR(block, iv)
+
+	// Create a 4k byte buffer to write out the decrypted file in chunks.
 	buf := make([]byte, 4096)
 	for {
 		n, err := inFile.Read(buf)
@@ -74,6 +86,7 @@ func decryptFile(encFile string, decFile string, key []byte, nonce []byte) {
 		}
 
 		outBuf := make([]byte, n)
+		// Perform decryption using CTR rotation on the current chunk.
 		ctr.XORKeyStream(outBuf, buf[:n])
 		outFile.Write(outBuf)
 

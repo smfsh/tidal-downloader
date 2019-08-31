@@ -40,8 +40,8 @@ func main() {
 
 	if stream.EncryptionKey != "" {
 		fmt.Println("Attempting to decrypt", track.Title)
-		key, nonce := decryptToken(stream.EncryptionKey)
-		decryptFile("file.flac", "file-decoded.flac", key, nonce)
+		key, iv := decryptToken(stream.EncryptionKey)
+		decryptFile("file.flac", "file-decoded.flac", key, iv)
 	}
 
 }
