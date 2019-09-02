@@ -2,11 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 )
 
 type tidalObject struct {
@@ -16,6 +18,14 @@ type tidalObject struct {
 	TrackNumber   int    `json:"trackNumber"`
 	Url           string `json:"url"`
 	EncryptionKey string `json:"encryptionKey"`
+	Artist        struct {
+		Id   int    `json:"id"`
+		Name string `json:"name"`
+	} `json:"artist"`
+	Album struct {
+		Id    int    `json:"id"`
+		Title string `json:"name"`
+	} `json:"album"`
 }
 
 func get(url string, c *tidalConfig) tidalObject {
@@ -62,22 +72,32 @@ func get(url string, c *tidalConfig) tidalObject {
 }
 
 // Track: 62437814
-func getTrack(id int, c *tidalConfig) tidalObject {
+func getTrackInfo(id int, c *tidalConfig) tidalObject {
 	return get("tracks/"+strconv.Itoa(id), c)
 }
 
 // Album: 62437813
-func getAlbum(id int, c *tidalConfig) tidalObject {
+func getAlbumInfo(id int, c *tidalConfig) tidalObject {
 	return get("albums/"+strconv.Itoa(id), c)
 }
 
 // Artist: 5221673
-func getArtist(id int, c *tidalConfig) tidalObject {
+func getArtistInfo(id int, c *tidalConfig) tidalObject {
 	return get("artists/"+strconv.Itoa(id), c)
 }
 
 func getStreamUrl(id int, c *tidalConfig) tidalObject {
 	return get("tracks/"+strconv.Itoa(id)+"/streamUrl", c)
+}
+
+func getStreamExtension(url string) string {
+	if strings.Contains(url, ".flac?") {
+		return ".flac"
+	} else if strings.Contains(url, ".mp4?") {
+		return ".mp4"
+	} else {
+		return ".m4a"
+	}
 }
 
 func downloadFile(url string, output string) error {
@@ -98,4 +118,55 @@ func downloadFile(url string, output string) error {
 	// Write the body to file
 	_, err = io.Copy(out, resp.Body)
 	return err
+}
+
+func downloadTrack(trackId int, albumId int, echo bool, c *tidalConfig) {
+	track := getTrackInfo(trackId, c)
+	album := getAlbumInfo(albumId, c)
+
+	if echo {
+		fmt.Println("Preparing Track Download:")
+		fmt.Println("Track Artist  ", track.Artist.Name)
+		fmt.Println("Album Title   ", album.Title)
+		fmt.Println("Track Title   ", track.Title)
+		fmt.Println("Track Number  ", track.TrackNumber)
+		fmt.Println("Track ID      ", track.Id)
+		fmt.Println("Duration      ", track.Duration)
+	}
+
+	stream := getStreamUrl(track.Id, c)
+
+	trackNumber := strconv.Itoa(track.TrackNumber)
+	if track.TrackNumber < 10 {
+		trackNumber = "0" + strconv.Itoa(track.TrackNumber)
+	}
+	ext := getStreamExtension(stream.Url)
+	outName := trackNumber + " - " + track.Title + ext
+	tempName := outName + ".tmp"
+	err := downloadFile(stream.Url, tempName)
+	if err != nil {
+		panic(err)
+	}
+
+	if stream.EncryptionKey != "" {
+		key, iv := decryptToken(stream.EncryptionKey)
+		decryptFile(tempName, outName, key, iv)
+		err := os.Remove(tempName)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		err := os.Rename(tempName, outName)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
+func downloadAlbum() {
+
+}
+
+func downloadArtist() {
+
 }
