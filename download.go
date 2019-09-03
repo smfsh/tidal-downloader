@@ -11,14 +11,17 @@ import (
 	"strings"
 )
 
-type tidalObject struct {
-	Id            int    `json:"id"`
-	Title         string `json:"title"`
-	Duration      int    `json:"duration"`
-	TrackNumber   int    `json:"trackNumber"`
-	Url           string `json:"url"`
-	EncryptionKey string `json:"encryptionKey"`
-	Artist        struct {
+type tidalBase struct {
+	Id    int    `json:"id"`
+	Title string `json:"title"`
+	Url   string `json:"url"`
+}
+
+type tidalTrack struct {
+	tidalBase
+	Duration    int `json:"duration"`
+	TrackNumber int `json:"trackNumber"`
+	Artist      struct {
 		Id   int    `json:"id"`
 		Name string `json:"name"`
 	} `json:"artist"`
@@ -28,7 +31,17 @@ type tidalObject struct {
 	} `json:"album"`
 }
 
-func get(url string, c *tidalConfig) tidalObject {
+type tidalAlbum struct {
+	tidalBase
+	Tracks []int
+}
+
+type tidalStream struct {
+	Url           string `json:"url"`
+	EncryptionKey string `json:"encryptionKey"`
+}
+
+func get(url string, c *tidalConfig) []byte {
 	var sid string
 
 	if c.quality != "LOSSLESS" {
@@ -60,10 +73,15 @@ func get(url string, c *tidalConfig) tidalObject {
 	if err != nil {
 		panic(err)
 	}
-	//fmt.Printf("%s\n", body)
 
-	var jsonMap tidalObject
-	err = json.Unmarshal(body, &jsonMap)
+	return body
+}
+
+// Track: 62437814
+func getTrackInfo(id int, c *tidalConfig) tidalTrack {
+	body := get("tracks/"+strconv.Itoa(id), c)
+	var jsonMap tidalTrack
+	err := json.Unmarshal(body, &jsonMap)
 	if err != nil {
 		panic(err)
 	}
@@ -71,23 +89,39 @@ func get(url string, c *tidalConfig) tidalObject {
 	return jsonMap
 }
 
-// Track: 62437814
-func getTrackInfo(id int, c *tidalConfig) tidalObject {
-	return get("tracks/"+strconv.Itoa(id), c)
-}
-
 // Album: 62437813
-func getAlbumInfo(id int, c *tidalConfig) tidalObject {
-	return get("albums/"+strconv.Itoa(id), c)
+func getAlbumInfo(id int, c *tidalConfig) tidalAlbum {
+	body := get("albums/"+strconv.Itoa(id), c)
+	var jsonMap tidalAlbum
+	err := json.Unmarshal(body, &jsonMap)
+	if err != nil {
+		panic(err)
+	}
+
+	return jsonMap
 }
 
 // Artist: 5221673
-func getArtistInfo(id int, c *tidalConfig) tidalObject {
-	return get("artists/"+strconv.Itoa(id), c)
+func getArtistInfo(id int, c *tidalConfig) tidalBase {
+	body := get("artists/"+strconv.Itoa(id), c)
+	var jsonMap tidalBase
+	err := json.Unmarshal(body, &jsonMap)
+	if err != nil {
+		panic(err)
+	}
+
+	return jsonMap
 }
 
-func getStreamUrl(id int, c *tidalConfig) tidalObject {
-	return get("tracks/"+strconv.Itoa(id)+"/streamUrl", c)
+func getStreamUrl(id int, c *tidalConfig) tidalStream {
+	body := get("tracks/"+strconv.Itoa(id)+"/streamUrl", c)
+	var jsonMap tidalStream
+	err := json.Unmarshal(body, &jsonMap)
+	if err != nil {
+		panic(err)
+	}
+
+	return jsonMap
 }
 
 func getStreamExtension(url string) string {
