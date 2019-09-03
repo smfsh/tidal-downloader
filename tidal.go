@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-const TIDAL_URL_BASE string = "https://api.tidalhifi.com/v1/"
+const TidalUrlBase string = "https://api.tidalhifi.com/v1/"
 
 func main() {
 	fmt.Println("Starting Tidal Downloader")

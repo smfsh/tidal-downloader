@@ -67,7 +67,7 @@ func getSession(c *tidalConfig, session int) sessionData {
 	params.Add("clientUniqueKey", c.uniqueKey)
 	params.Add("version", "1.9.1")
 
-	resp, err := http.PostForm(TIDAL_URL_BASE+"login/username", params)
+	resp, err := http.PostForm(TidalUrlBase+"login/username", params)
 	if err != nil {
 		panic("Unable to authenticate to Tidal.")
 	}
@@ -84,7 +84,7 @@ func getSession(c *tidalConfig, session int) sessionData {
 
 	vp := url.Values{}
 	vp.Add("sessionId", sessionData.SessionId)
-	validate, err := http.Get(TIDAL_URL_BASE + "users/" + strconv.Itoa(sessionData.UserId) + "?" + vp.Encode())
+	validate, err := http.Get(TidalUrlBase + "users/" + strconv.Itoa(sessionData.UserId) + "?" + vp.Encode())
 	if err != nil {
 		panic(err)
 	}

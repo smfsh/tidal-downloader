@@ -56,7 +56,7 @@ func get(url string, c *tidalConfig) []byte {
 		sid = c.sessionid2
 	}
 
-	req, err := http.NewRequest("GET", TIDAL_URL_BASE+url, nil)
+	req, err := http.NewRequest("GET", TidalUrlBase+url, nil)
 	if err != nil {
 		panic(err)
 	}

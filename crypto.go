@@ -8,10 +8,10 @@ import (
 	"os"
 )
 
-const MASTER_KEY string = "UIlTTEMmmLfGowo/UC60x2H45W6MdGgTRfo/umg4754="
+const MasterKey string = "UIlTTEMmmLfGowo/UC60x2H45W6MdGgTRfo/umg4754="
 
 func decryptToken(token string) ([]byte, []byte) {
-	dMaster, err := base64.StdEncoding.DecodeString(MASTER_KEY)
+	dMaster, err := base64.StdEncoding.DecodeString(MasterKey)
 	if err != nil {
 		panic(err)
 	}
