@@ -38,7 +38,7 @@ func getCredentials() (string, string) {
 }
 
 func login(c *tidalConfig) {
-	fmt.Println("Attempting to login as", c.username)
+	fmt.Println("\nAttempting to login as", c.username)
 	session1 := getSession(c, 1)
 	session2 := getSession(c, 2)
 
