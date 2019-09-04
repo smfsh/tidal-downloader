@@ -167,9 +167,11 @@ func downloadFile(url string, output string) error {
 	return err
 }
 
-func downloadTrack(trackId int, albumId int, echo bool, c *tidalConfig) {
+func downloadTrack(trackId int, album tidalAlbum, echo bool, c *tidalConfig) {
 	track := getTrackInfo(trackId, c)
-	album := getAlbumInfo(albumId, c)
+	if album.Id == 0 {
+		album = getAlbumInfo(track.Album.Id, c)
+	}
 
 	if echo {
 		fmt.Println("Preparing Track Download:")
@@ -210,8 +212,11 @@ func downloadTrack(trackId int, albumId int, echo bool, c *tidalConfig) {
 	}
 }
 
-func downloadAlbum() {
-
+func downloadAlbum(albumId int, c *tidalConfig) {
+	album := getAlbumInfo(albumId, c)
+	for _, track := range album.Tracks {
+		downloadTrack(track, album, true, c)
+	}
 }
 
 func downloadArtist() {
