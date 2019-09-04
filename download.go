@@ -166,6 +166,19 @@ func getStreamExtension(url string) string {
 	}
 }
 
+func cleanPath(path string) string {
+	path = strings.Replace(path, `:`, "-", -1)
+	path = strings.Replace(path, `/`, "-", -1)
+	path = strings.Replace(path, `\`, "-", -1)
+	path = strings.Replace(path, `?`, "-", -1)
+	path = strings.Replace(path, `<`, "-", -1)
+	path = strings.Replace(path, `>`, "-", -1)
+	path = strings.Replace(path, `|`, "-", -1)
+	path = strings.Replace(path, `*`, "-", -1)
+
+	return path
+}
+
 func downloadFile(url string, output string) error {
 	// Get the data
 	resp, err := http.Get(url)
@@ -204,7 +217,7 @@ func downloadTrack(trackId int, album tidalAlbum, echo bool, c *tidalConfig) {
 
 	stream := getStreamUrl(track.Id, c)
 
-	basePath := filepath.Join(track.Artist.Name, album.Title)
+	basePath := filepath.Join(cleanPath(track.Artist.Name), cleanPath(album.Title))
 	err := os.MkdirAll(basePath, os.ModePerm)
 	if err != nil {
 		panic(err)
@@ -215,7 +228,7 @@ func downloadTrack(trackId int, album tidalAlbum, echo bool, c *tidalConfig) {
 		trackNumber = "0" + strconv.Itoa(track.TrackNumber)
 	}
 	ext := getStreamExtension(stream.Url)
-	outName := filepath.Join(basePath, trackNumber+" - "+track.Title+ext)
+	outName := filepath.Join(basePath, cleanPath(trackNumber+" - "+track.Title+ext))
 	tempName := outName + ".tmp"
 	err = downloadFile(stream.Url, tempName)
 	if err != nil {
