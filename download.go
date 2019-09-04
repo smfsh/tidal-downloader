@@ -31,6 +31,11 @@ type tidalTrack struct {
 	} `json:"album"`
 }
 
+type tidalStream struct {
+	Url           string `json:"url"`
+	EncryptionKey string `json:"encryptionKey"`
+}
+
 type tidalAlbum struct {
 	tidalBase
 	Tracks []int
@@ -42,9 +47,15 @@ type tidalAlbumTracks struct {
 	} `json:"items"`
 }
 
-type tidalStream struct {
-	Url           string `json:"url"`
-	EncryptionKey string `json:"encryptionKey"`
+type tidalArtist struct {
+	tidalBase
+	Albums []int
+}
+
+type tidalArtistAlbums struct {
+	Items []struct {
+		Id int `json:"id"`
+	} `json:"items"`
 }
 
 func get(url string, c *tidalConfig) []byte {
@@ -115,12 +126,19 @@ func getAlbumInfo(id int, c *tidalConfig) tidalAlbum {
 }
 
 // Artist: 5221673
-func getArtistInfo(id int, c *tidalConfig) tidalAlbum {
+func getArtistInfo(id int, c *tidalConfig) tidalArtist {
 	body := get("artists/"+strconv.Itoa(id), c)
-	var jsonMap tidalAlbum
+	var jsonMap tidalArtist
 	err := json.Unmarshal(body, &jsonMap)
 	if err != nil {
 		panic(err)
+	}
+
+	albums := get("artists/"+strconv.Itoa(id)+"/albums", c)
+	var jsonTracks tidalArtistAlbums
+	json.Unmarshal(albums, &jsonTracks)
+	for _, track := range jsonTracks.Items {
+		jsonMap.Albums = append(jsonMap.Albums, track.Id)
 	}
 
 	return jsonMap
@@ -219,6 +237,9 @@ func downloadAlbum(albumId int, c *tidalConfig) {
 	}
 }
 
-func downloadArtist() {
-
+func downloadArtist(artistId int, c *tidalConfig) {
+	artist := getArtistInfo(artistId, c)
+	for _, album := range artist.Albums {
+		downloadAlbum(album, c)
+	}
 }
