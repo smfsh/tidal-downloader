@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -203,14 +204,20 @@ func downloadTrack(trackId int, album tidalAlbum, echo bool, c *tidalConfig) {
 
 	stream := getStreamUrl(track.Id, c)
 
+	basePath := filepath.Join(track.Artist.Name, album.Title)
+	err := os.MkdirAll(basePath, os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
+
 	trackNumber := strconv.Itoa(track.TrackNumber)
 	if track.TrackNumber < 10 {
 		trackNumber = "0" + strconv.Itoa(track.TrackNumber)
 	}
 	ext := getStreamExtension(stream.Url)
-	outName := trackNumber + " - " + track.Title + ext
+	outName := filepath.Join(basePath, trackNumber+" - "+track.Title+ext)
 	tempName := outName + ".tmp"
-	err := downloadFile(stream.Url, tempName)
+	err = downloadFile(stream.Url, tempName)
 	if err != nil {
 		panic(err)
 	}
