@@ -21,6 +21,19 @@ type sessionData struct {
 	UserId      int    `json:"userId"`
 }
 
+func newSession() *tidalConfig {
+	// Get username and password from the command line.
+	username, password := getCredentials()
+
+	// Prepare default configuration.
+	c := newTidalConfig(false, "HI_RES", username, password)
+
+	// Login with configuration.
+	processLogin(c)
+
+	return c
+}
+
 func getCredentials() (string, string) {
 	reader := bufio.NewReader(os.Stdin)
 
@@ -37,7 +50,7 @@ func getCredentials() (string, string) {
 	return strings.TrimSpace(username), strings.TrimSpace(password)
 }
 
-func login(c *tidalConfig) {
+func processLogin(c *tidalConfig) {
 	fmt.Println("\nAttempting to login as", c.username)
 	session1 := getSession(c, 1)
 	session2 := getSession(c, 2)
@@ -45,7 +58,6 @@ func login(c *tidalConfig) {
 	c.countrycode = session1.CountryCode
 	c.userid = session1.UserId
 	c.sessionid1 = session1.SessionId
-
 	c.sessionid2 = session2.SessionId
 
 	fmt.Println("Settings:", c)

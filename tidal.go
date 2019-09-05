@@ -16,14 +16,7 @@ const TidalUrlBase string = "https://api.tidalhifi.com/v1/"
 func main() {
 	fmt.Println("Starting Tidal Downloader")
 
-	// Get username and password from the command line.
-	username, password := getCredentials()
-
-	// Prepare default configuration.
-	c := newTidalConfig(false, "HI_RES", username, password)
-
-	// Login with configuration.
-	login(c)
+	c := newSession()
 
 	for {
 		reader := bufio.NewReader(os.Stdin)
