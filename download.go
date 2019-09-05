@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type tidalBase struct {
@@ -250,16 +251,30 @@ func downloadTrack(trackId int, album tidalAlbum, echo bool, c *tidalConfig) {
 	}
 }
 
-func downloadAlbum(albumId int, c *tidalConfig) {
-	album := getAlbumInfo(albumId, c)
-	for _, track := range album.Tracks {
-		downloadTrack(track, album, true, c)
+func downloadAlbum(albumId int, parallel bool, c *tidalConfig) {
+	if parallel {
+		var wg sync.WaitGroup
+
+		album := getAlbumInfo(albumId, c)
+		wg.Add(len(album.Tracks))
+		for _, track := range album.Tracks {
+			go func(t int, a tidalAlbum) {
+				downloadTrack(t, a, true, c)
+				wg.Done()
+			}(track, album)
+		}
+		wg.Wait()
+	} else {
+		album := getAlbumInfo(albumId, c)
+		for _, track := range album.Tracks {
+			downloadTrack(track, album, true, c)
+		}
 	}
 }
 
 func downloadArtist(artistId int, c *tidalConfig) {
 	artist := getArtistInfo(artistId, c)
 	for _, album := range artist.Albums {
-		downloadAlbum(album, c)
+		downloadAlbum(album, false, c)
 	}
 }

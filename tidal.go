@@ -57,12 +57,13 @@ func processUrl(tidalUrl string, c *tidalConfig) error {
 	// https://listen.tidal.com/album/116415070
 	if strings.Contains(u.Path, "album") {
 		fmt.Println("Found an album, processing...")
-		downloadAlbum(id, c)
+		downloadAlbum(id, false, c)
 		return nil
 	}
 	// https://listen.tidal.com/artist/3850668
 	if strings.Contains(u.Path, "artist") {
 		fmt.Println("Found an artist URL, processing...")
+		downloadArtist(id, c)
 		return nil
 	}
 
