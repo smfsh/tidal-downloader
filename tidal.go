@@ -35,7 +35,6 @@ func main() {
 			fmt.Println(err)
 		}
 	}
-	//downloadTrack(80185438, tidalAlbum{}, true, c)
 }
 
 func processUrl(tidalUrl string, c *tidalConfig) error {
