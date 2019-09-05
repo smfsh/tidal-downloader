@@ -275,6 +275,6 @@ func downloadAlbum(albumId int, parallel bool, c *tidalConfig) {
 func downloadArtist(artistId int, c *tidalConfig) {
 	artist := getArtistInfo(artistId, c)
 	for _, album := range artist.Albums {
-		downloadAlbum(album, false, c)
+		downloadAlbum(album, c.parallel, c)
 	}
 }

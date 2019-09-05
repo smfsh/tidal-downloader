@@ -20,7 +20,7 @@ func main() {
 	username, password := getCredentials()
 
 	// Prepare default configuration.
-	c := newTidalConfig("HI_RES", username, password)
+	c := newTidalConfig(false, "HI_RES", username, password)
 
 	// Login with configuration.
 	login(c)
@@ -57,7 +57,7 @@ func processUrl(tidalUrl string, c *tidalConfig) error {
 	// https://listen.tidal.com/album/116415070
 	if strings.Contains(u.Path, "album") {
 		fmt.Println("Found an album, processing...")
-		downloadAlbum(id, false, c)
+		downloadAlbum(id, c.parallel, c)
 		return nil
 	}
 	// https://listen.tidal.com/artist/3850668
